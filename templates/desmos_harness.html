@@ -275,58 +275,7 @@ function setStatus(msg, type) {
     }
 }
 
-async function graph() {
-    _activeAbortController = new AbortController();
-    document.getElementById('abortBtn').style.display = 'inline-block';
-    document.getElementById('abortBtn').textContent = 'Abort';
-    const input = document.getElementById('input').value.trim();
-    if (!input) return;
-    const d = document.getElementById('debug'), t = document.getElementById('think-area');
-    setStatus('Calling model...');
-    d.style.display = 'none';
-    t.style.display = 'none';
-    resetGraph();
-    try {
-        const r = await fetch(BASE + '/api/graph', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ input })
-        });
-        const data = await r.json();
-        if (!data.success) {
-            setStatus('Error: ' + data.error, 'error');
-            return;
-        }
 
-        if (data.think) {
-            t.textContent = 'Model thinking:\n' + data.think;
-            t.style.display = 'block';
-        }
-
-        let dbg = 'INPUT: ' + input + '\nMODEL: ' + (data.response || 'No response') + '\n';
-
-        if (data.graph_data && data.graph_data.success) {
-            const json = data.graph_data.desmos_json;
-            dbg += '\nDESMOS JSON:\n' + JSON.stringify(json, null, 2);
-            d.textContent = dbg;
-            d.style.display = 'block';
-            renderGraph(json);
-            requestAnimationFrame(() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' }));
-            setStatus('Rendered', 'ok');
-        } else {
-            dbg += '\n(no graph data)';
-            d.textContent = dbg;
-            d.style.display = 'block';
-            setStatus('No graph returned');
-        }
-        if (data.log_entries) renderLogEntries(data.log_entries);
-        else loadLog();
-    } catch (e) {
-        setStatus('Error: ' + e.message, 'error');
-    }
-    _activeAbortController = null;
-    document.getElementById('abortBtn').style.display = 'none';
-}
 
 async function validateOnly() {
     _activeAbortController = new AbortController();
