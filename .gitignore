@@ -1,0 +1,16 @@
+.opencode
+.pytest_cache
+NEXT_SESSION_CONTEXT.md
+TODO.md
+__pycache__/
+backup-home.sh
+conversation_history.json
+failed_attempts.jsonl
+learning_log.jsonl
+sandbox.log
+successful_graphs.jsonl
+session_state.json
+logs/
+scripts/batch_results.json
+*.gguf
+

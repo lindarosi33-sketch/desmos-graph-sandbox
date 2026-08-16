@@ -1,0 +1,65 @@
+# Sandbox Graph Testing Problems
+# Tests: piecewise, points, lines, parametric, implicit, domain restrictions
+
+# -- Piecewise & Step Functions --
+Graph the sign function: sgn(x) over -3 to 3
+Graph a step function: 0 for x < 0, 1 for x >= 0
+Graph a ramp function: 0 for x < 0, x for x >= 0
+Graph a half-wave rectified sine: sin(x) for sin(x) > 0, else 0 over 0 to 2pi
+
+# -- Points & Line Segments --
+Plot points at (1,1), (2,4), and (3,9) with lines connecting them
+Plot the vertices of a square at (1,1), (-1,1), (-1,-1), (1,-1) with lines forming the square
+Plot a right triangle with vertices at (0,0), (3,0), (0,4) and draw the hypotenuse
+Plot the points (0,0), (1,0), (0.5, sqrt(3)/2) forming an equilateral triangle
+
+# -- Parametric Curves --
+Graph a circle using parametrics: x=cos(t), y=sin(t) for 0 <= t <= 2pi
+Graph a helix projection: x=cos(t), y=sin(t) for 0 <= t <= 4pi
+Graph an ellipse: x=3cos(t), y=2sin(t) for 0 <= t <= 2pi
+Graph a spiral: x=t*cos(t), y=t*sin(t) for 0 <= t <= 4pi
+
+# -- Implicit & Polar --
+Graph x^2 + y^2 = 4 (a circle of radius 2)
+Graph y^2 = x (a right-opening parabola)
+Graph r = 1 + cos(theta) (a cardioid) — use polar mode
+Graph r = sin(2*theta) (a four-leaf rose) — use polar mode
+
+# -- Fourier Series & Approximations --
+Graph the Fourier approximation of a square wave: sum of sin((2n-1)x)/(2n-1) for n=1 to 5, multiplied by 4/pi
+Graph a sawtooth wave: sum of sin(nx)/n for n=1 to 10, multiplied by 2/pi over -pi to pi
+Graph a triangle wave: sum of (-1)^n*sin((2n+1)x)/(2n+1)^2 for n=0 to 5, multiplied by 8/pi^2
+
+# -- Transient & Decay --
+Graph an exponential decay: e^(-0.5x) for x >= 0
+Graph an RC charging curve: 1 - e^(-x) for x >= 0, with points at (0,0) and (1, 1-1/e)
+Graph a damped oscillation: e^(-0.2x) * cos(3x) for x >= 0
+
+# -- Absolute Value & Max/Min --
+Graph |x| over -3 to 3 with points at (-1,1), (0,0), (1,1)
+Graph min(x, 0) over -3 to 3
+Graph max(0, x) over -3 to 3 (a ramp)
+Graph the absolute difference: |x - y| where y = sin(x), over 0 to 2pi
+
+# -- Probability Distributions --
+Graph a normal distribution: (1/sqrt(2*pi)) * e^(-x^2/2) over -4 to 4
+Graph a chi-squared distribution with 3 degrees of freedom: (1/(2^(3/2)*gamma(3/2))) * x^(1/2) * e^(-x/2) for x >= 0
+Graph the CDF of a standard normal using numerical approximation
+
+# -- Signal Processing --
+Graph a sinc function: sin(x)/x over -10 to 10
+Graph a Gaussian pulse: e^(-x^2/0.1) over -5 to 5
+Graph the convolution of two rect functions (a triangle function)
+Graph two sine waves with different frequencies and their beat pattern: sin(10x) + sin(10.5x)
+
+# -- Geometry --
+Graph the unit circle x^2 + y^2 = 1 with points at the 45-degree marks
+Graph a regular hexagon centered at origin with vertices on the unit circle
+Graph the parabola y = x^2 with tangent line at (1,1)
+Graph a logarithmic spiral: r = e^(theta/5) for 0 <= theta <= 4pi
+
+# -- Engineering --
+Graph a diode clipping circuit: clip sin(x) at +0.7 and -0.7
+Graph a PWM signal approximation: sgn(sin(x) - 0.3*sin(0.5*x))
+Graph a BJT collector curve family: I = Is*e^(V/0.026) for Is = 1e-12, 1e-11, 1e-10
+Graph the transfer function of a low-pass RC filter: 1/sqrt(1 + (omega*RC)^2) with RC=1

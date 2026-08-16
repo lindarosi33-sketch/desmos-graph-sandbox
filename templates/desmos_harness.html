@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sandbox Desmos Graph Test</title>
+<style>
+body{font-family:system-ui;padding:20px;max-width:1000px;margin:0 auto;background:#1a1a2e;color:#e0e0e0}
+textarea{width:100%;padding:10px;font-size:16px;box-sizing:border-box;background:#2a2a3e;border:1px solid #444;color:#e0e0e0;border-radius:4px;margin-bottom:8px;min-height:44px;resize:vertical}
+button{padding:10px 20px;background:#2d7ee9;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;margin:4px}
+button:hover{background:#1a6fd9}
+#calculator{width:100%;height:500px;border:1px solid #444;margin-top:15px;border-radius:4px}
+#debug{background:#0d0d1a;color:#e0e0e0;border:1px solid #444;border-radius:4px;padding:12px;margin-top:10px;font-family:monospace;font-size:13px;white-space:pre-wrap;display:none}
+#think-area{background:#1a1a0e;color:#e0e0e0;border:1px solid #888840;border-radius:4px;padding:12px;margin-top:10px;font-size:13px;display:none;white-space:pre-wrap;max-height:2000px;overflow:auto}
+#status{margin:8px 0;font-size:14px;color:#888;display:flex;align-items:center;gap:10px}
+.error{color:#ff6b6b}.ok{color:#51cf66}
+.spinner{width:20px;height:20px;border:3px solid #444;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=DESMOS_API_KEY_REDACTED"></script>
+</head>
+<body>
+<h2 style="color:#4a9eff">Sandbox Desmos Graph Test</h2>
+<p style="color:#888;font-size:14px;">Model returns Desmos JSON payload via graph tool</p>
+
+<textarea id="input" placeholder="Enter function to graph">f(x) = |x|</textarea>
+
+<div>
+<button onclick="validateOnly()" style="background:#6a4e9a">Graph</button>
+<button onclick="abortRequest()" id="abortBtn" style="background:#c00;color:#fff;display:none">Abort</button>
+</div>
+
+<div id="status"><div class="spinner" id="spinner"></div><span id="status-text"></span></div>
+<div id="think-area"></div>
+<div id="debug"></div>
+<div id="calculator"></div>
+
+<h3 style="color:#4a9eff;margin-top:20px">Learning Log</h3>
+<div id="log" style="background:#0d0d1a;color:#e0e0e0;border:1px solid #444;border-radius:4px;padding:12px;font-family:monospace;font-size:12px;white-space:pre-wrap;max-height:400px;overflow:auto"></div>
+<div><button onclick="loadLog()" style="padding:6px 14px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin-top:6px">Refresh Log</button></div>
+
+<script>
+const elt = document.getElementById('calculator');
+let calc = Desmos.GraphingCalculator(elt, {
+    expressions:true, settingsMenu:false, zoomButtons:true, border:false
+});
+const BASE = window.location.origin;
+
+
+function resetGraph() {
+    calc.destroy();
+    elt.innerHTML = '';
+    calc = Desmos.GraphingCalculator(elt, {
+        expressions:true, settingsMenu:false, zoomButtons:true, border:false
+    });
+}
+
+function styleFromType(t) {
+    if (t === 'open') return Desmos.Styles.OPEN;
+    if (t === 'closed') return Desmos.Styles.CLOSED;
+    if (t === 'point') return Desmos.Styles.POINT;
+    if (t === 'dashed') return Desmos.Styles.DASHED;
+    if (t === 'dotted') return Desmos.Styles.DOTTED;
+    return Desmos.Styles.DEFAULT;
+}
+
+function dragModeFromType(t) {
+    if (t === 'X') return Desmos.DragModes.X;
+    if (t === 'Y') return Desmos.DragModes.Y;
+    if (t === 'XY') return Desmos.DragModes.XY;
+    return Desmos.DragModes.NONE;
+}
+
+function labelSizeFromType(t) {
+    if (t === 'small') return Desmos.LabelSizes.SMALL;
+    if (t === 'large') return Desmos.LabelSizes.LARGE;
+    return Desmos.LabelSizes.MEDIUM;
+}
+
+function labelOrientationFromType(t) {
+    if (t === 'left') return Desmos.LabelOrientations.LEFT;
+    if (t === 'right') return Desmos.LabelOrientations.RIGHT;
+    if (t === 'up') return Desmos.LabelOrientations.UP;
+    if (t === 'down') return Desmos.LabelOrientations.DOWN;
+    return Desmos.LabelOrientations.DEFAULT;
+}
+
+function validLatex(l) {
+    if (!l) return false;
+    var opens = (l.match(/\{/g) || []).length;
+    var closes = (l.match(/\}/g) || []).length;
+    return opens === closes;
+}
+
+function renderGraph(json) {
+    try {
+        calc.setBlank();
+    } catch(e) {
+        console.warn('setBlank error:', e);
+    }
+    if (json.latex) {
+        try {
+            var expr = { id: 'g1', latex: json.latex };
+            if (json.title) { expr.title = json.title; }
+            if (json.color) { expr.color = json.color; }
+            if (json.lineStyle) { expr.lineStyle = styleFromType(json.lineStyle); }
+            if (json.lineWidth) { expr.lineWidth = json.lineWidth; }
+            if (json.lineOpacity !== undefined && json.lineOpacity !== null) { expr.lineOpacity = json.lineOpacity; }
+            if (json.fill) { expr.fill = true; }
+            if (json.fillOpacity !== undefined && json.fillOpacity !== null) { expr.fillOpacity = json.fillOpacity; }
+            if (json.fillColor) { expr.fillColor = json.fillColor; }
+            if (json.pointStyle) { expr.pointStyle = styleFromType(json.pointStyle); }
+            if (json.pointSize) { expr.pointSize = json.pointSize; }
+            if (json.pointOpacity !== undefined && json.pointOpacity !== null) { expr.pointOpacity = json.pointOpacity; }
+            if (json.lines !== undefined) { expr.lines = json.lines; }
+            if (json.sliderBounds) { expr.sliderBounds = json.sliderBounds; }
+            if (json.playing !== undefined) { expr.playing = json.playing; }
+            if (json.regressions !== undefined) { expr.regressions = json.regressions; }
+            if (json.logModeRegressions !== undefined) { expr.logModeRegressions = json.logModeRegressions; }
+            if (json.forceLogModeRegressions !== undefined) { expr.forceLogModeRegressions = json.forceLogModeRegressions; }
+            if (json.tableOfResults !== undefined) { expr.tableOfResults = json.tableOfResults; }
+            if (json.hidden !== undefined) { expr.hidden = json.hidden; }
+            if (json.secret !== undefined) { expr.secret = json.secret; }
+            if (json.label) { expr.label = json.label; }
+            if (json.showLabel !== undefined) { expr.showLabel = json.showLabel; }
+            if (json.labelSize) { expr.labelSize = labelSizeFromType(json.labelSize); }
+            if (json.labelOrientation) { expr.labelOrientation = labelOrientationFromType(json.labelOrientation); }
+            if (json.dragMode) { expr.dragMode = dragModeFromType(json.dragMode); }
+            if (json.domain) { expr.domain = json.domain; }
+            if (json.parametricDomain) { expr.parametricDomain = json.parametricDomain; }
+            if (json.polarDomain) { expr.polarDomain = json.polarDomain; }
+            if (json.slider) { expr.slider = json.slider; }
+            calc.setExpression(expr);
+        } catch(e) {
+            console.warn('renderGraph setExpression error:', e, 'latex:', json.latex);
+        }
+    }
+    if (json.points) {
+        json.points.forEach(function(p, i) {
+            try {
+                var style = p.type ? styleFromType(p.type) : Desmos.Styles.DEFAULT;
+                var expr = { id: 'p' + i, latex: '(' + p.x + ',' + p.y + ')', style: style };
+                if (p.color) { expr.color = p.color; }
+                if (p.label) {
+                    expr.label = p.label;
+                    if (p.label.indexOf('\\') !== -1 && p.label.indexOf('\\text') === -1) {
+                        expr.label = '\\text{' + p.label + '}';
+                    }
+                }
+                if (p.showLabel !== undefined) { expr.showLabel = p.showLabel; }
+                if (p.pointStyle) { expr.pointStyle = styleFromType(p.pointStyle); }
+                if (p.pointSize) { expr.pointSize = p.pointSize; }
+                if (p.dragMode) { expr.dragMode = dragModeFromType(p.dragMode); }
+                if (p.secret !== undefined) { expr.secret = p.secret; }
+                if (p.hidden !== undefined) { expr.hidden = p.hidden; }
+                if (p.labelSize) { expr.labelSize = labelSizeFromType(p.labelSize); }
+                if (p.labelOrientation) { expr.labelOrientation = labelOrientationFromType(p.labelOrientation); }
+                calc.setExpression(expr);
+            } catch(e) {
+                console.warn('renderGraph point error:', e, 'point:', p);
+            }
+        });
+    }
+    if (json.bounds || json.squareAxes) {
+        try {
+            var b = json.bounds || {};
+            var left = b.left !== undefined ? b.left : (b.xMin !== undefined ? b.xMin : -10);
+            var right = b.right !== undefined ? b.right : (b.xMax !== undefined ? b.xMax : 10);
+            var bottom = b.bottom !== undefined ? b.bottom : (b.yMin !== undefined ? b.yMin : -10);
+            var top = b.top !== undefined ? b.top : (b.yMax !== undefined ? b.yMax : 10);
+            if (json.squareAxes) {
+                var xRange = right - left;
+                var yRange = top - bottom;
+                var cx = (left + right) / 2;
+                var cy = (bottom + top) / 2;
+                var half = Math.max(xRange, yRange) / 2;
+                if (half < 0.01) half = 5;
+                left = cx - half;
+                right = cx + half;
+                bottom = cy - half;
+                top = cy + half;
+            }
+            calc.setMathBounds({left: left, right: right, bottom: bottom, top: top});
+        } catch(e) {
+            console.warn('renderGraph bounds error:', e);
+        }
+    }
+    try {
+        var settings = {};
+        if (json.showGrid === undefined) { settings.showGrid = true; }
+        if (json.xAxisLabel) { settings.xAxisLabel = json.xAxisLabel; }
+        if (json.yAxisLabel) { settings.yAxisLabel = json.yAxisLabel; }
+        function parseStep(s) {
+            if (!s) return '';
+            var n = s.replace('\\pi', String(Math.PI)).replace('\\\\pi', String(Math.PI));
+            try { return eval(n); } catch(e) { return s; }
+        }
+        if (json.xAxisStep || json.yAxisStep) {
+            settings.xAxisStep = parseStep(json.xAxisStep);
+            settings.yAxisStep = parseStep(json.yAxisStep);
+        } else if (json.latex && /\b(sin|cos|tan|pi)\b|\\sin|\\cos|\\tan|\\pi|π/.test(json.latex)) {
+            settings.xAxisStep = Math.PI / 2;
+        }
+        if (json.showGrid !== undefined) { settings.showGrid = json.showGrid; }
+        if (json.xAxisArrowMode) { settings.xAxisArrowMode = json.xAxisArrowMode; }
+        if (json.yAxisArrowMode) { settings.yAxisArrowMode = json.yAxisArrowMode; }
+        if (json.lockViewport !== undefined) { settings.lockViewport = json.lockViewport; }
+        if (json.polarMode !== undefined) { settings.polarMode = json.polarMode; }
+        if (json.projectorMode !== undefined) { settings.projectorMode = json.projectorMode; }
+        if (json.xAxisMinorGridlines !== undefined) { settings.xAxisMinorGridlines = json.xAxisMinorGridlines; }
+        if (json.yAxisMinorGridlines !== undefined) { settings.yAxisMinorGridlines = json.yAxisMinorGridlines; }
+        if (json.xAxisLabelMode) { settings.xAxisLabelMode = json.xAxisLabelMode; }
+        if (json.yAxisLabelMode) { settings.yAxisLabelMode = json.yAxisLabelMode; }
+        if (json.muted !== undefined) { settings.muted = json.muted; }
+        if (json.degreeMode !== undefined) { settings.degreeMode = json.degreeMode; }
+        if (json.regressions !== undefined) { settings.regressions = json.regressions; }
+        if (json.forceLogModeRegressions !== undefined) { settings.forceLogModeRegressions = json.forceLogModeRegressions; }
+        if (json.logModeRegressions !== undefined) { settings.logModeRegressions = json.logModeRegressions; }
+        if (json.tableOfResults !== undefined) { settings.tableOfResults = json.tableOfResults; }
+        if (json.fontSize) { settings.fontSize = json.fontSize; }
+        if (json.graphDescription) { settings.graphDescription = json.graphDescription; }
+        if (json.brailleControls !== undefined) { settings.brailleControls = json.brailleControls; }
+        if (json.brailleMode !== undefined) { settings.brailleMode = json.brailleMode; }
+        if (json.invertedColors !== undefined) { settings.invertedColors = json.invertedColors; }
+        if (json.keypadActivated !== undefined) { settings.keypadActivated = json.keypadActivated; }
+        if (json.audio !== undefined) { settings.audio = json.audio; }
+        if (json.onEvaluationCopyClick) { settings.onEvaluationCopyClick = json.onEvaluationCopyClick; }
+        if (json.colors) { settings.colors = json.colors; }
+        if (json.restrictedFunctions) { settings.restrictedFunctions = json.restrictedFunctions; }
+        if (json.showResetButtonOnGraphpaper !== undefined) { settings.showResetButtonOnGraphpaper = json.showResetButtonOnGraphpaper; }
+        if (json.randomSeed) { settings.randomSeed = json.randomSeed; }
+        if (Object.keys(settings).length > 0) {
+            calc.updateSettings(settings);
+        }
+    } catch(e) {
+        console.warn('renderGraph settings error:', e);
+    }
+    if (!json.bounds && !json.squareAxes) {
+        setTimeout(() => calc.zoomToFit(), 200);
+    }
+}
+
+var _activeAbortController = null;
+
+async function abortRequest() {
+    document.getElementById('abortBtn').style.display = 'none';
+    document.getElementById('abortBtn').textContent = '…';
+    try {
+        await fetch(BASE + '/api/abort', { method: 'POST' });
+    } catch(e) {}
+}
+
+function setStatus(msg, type) {
+    var spinner = document.getElementById('spinner');
+    var text = document.getElementById('status-text');
+    if (msg === 'Calling model...' || msg === 'Validating...') {
+        spinner.style.display = 'inline-block';
+        text.textContent = msg;
+        document.getElementById('status').className = '';
+    } else {
+        spinner.style.display = 'none';
+        text.textContent = msg;
+        document.getElementById('status').className = type || '';
+    }
+}
+
+async function graph() {
+    _activeAbortController = new AbortController();
+    document.getElementById('abortBtn').style.display = 'inline-block';
+    document.getElementById('abortBtn').textContent = 'Abort';
+    const input = document.getElementById('input').value.trim();
+    if (!input) return;
+    const d = document.getElementById('debug'), t = document.getElementById('think-area');
+    setStatus('Calling model...');
+    d.style.display = 'none';
+    t.style.display = 'none';
+    resetGraph();
+    try {
+        const r = await fetch(BASE + '/api/graph', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ input })
+        });
+        const data = await r.json();
+        if (!data.success) {
+            setStatus('Error: ' + data.error, 'error');
+            return;
+        }
+
+        if (data.think) {
+            t.textContent = 'Model thinking:\n' + data.think;
+            t.style.display = 'block';
+        }
+
+        let dbg = 'INPUT: ' + input + '\nMODEL: ' + (data.response || 'No response') + '\n';
+
+        if (data.graph_data && data.graph_data.success) {
+            const json = data.graph_data.desmos_json;
+            dbg += '\nDESMOS JSON:\n' + JSON.stringify(json, null, 2);
+            d.textContent = dbg;
+            d.style.display = 'block';
+            renderGraph(json);
+            requestAnimationFrame(() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' }));
+            setStatus('Rendered', 'ok');
+        } else {
+            dbg += '\n(no graph data)';
+            d.textContent = dbg;
+            d.style.display = 'block';
+            setStatus('No graph returned');
+        }
+        if (data.log_entries) renderLogEntries(data.log_entries);
+        else loadLog();
+    } catch (e) {
+        setStatus('Error: ' + e.message, 'error');
+    }
+    _activeAbortController = null;
+    document.getElementById('abortBtn').style.display = 'none';
+}
+
+async function validateOnly() {
+    _activeAbortController = new AbortController();
+    document.getElementById('abortBtn').style.display = 'inline-block';
+    document.getElementById('abortBtn').textContent = 'Abort';
+    const input = document.getElementById('input').value.trim();
+    if (!input) return;
+    const d = document.getElementById('debug'), t = document.getElementById('think-area');
+    setStatus('Validating...');
+    d.style.display = 'none';
+    t.style.display = 'none';
+    resetGraph();
+    document.getElementById('log').textContent = '';
+    try {
+        let session_id = null;
+        const r = await fetch(BASE + '/api/validate_complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ input })
+        });
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, {stream: true});
+            const parts = buf.split('\n\n');
+            buf = parts.pop();
+            for (const part of parts) {
+                const line = part.trim();
+                if (!line.startsWith('data: ')) continue;
+                const payload = line.slice(6);
+                if (payload.startsWith('session_id:')) { session_id = payload.slice(11); continue; }
+                if (payload === 'log_update') { loadLog(session_id); continue; }
+                const jsonStr = payload.startsWith('complete:') ? payload.slice(9) : payload;
+                const data = JSON.parse(jsonStr);
+                session_id = data.session_id || session_id;
+                if (data.think) {
+                    t.textContent = 'Model thinking:\n' + data.think;
+                    t.style.display = 'block';
+                }
+                let dbg = 'INPUT: ' + input + '\nMODEL: ' + (data.response || 'No response') + '\n';
+                dbg += '\nVALIDATED LATEX: ' + (data.validated_latex || 'None') + '\n';
+                dbg += '\nIterations: ' + (data.iterations || '?');
+                d.textContent = dbg;
+                d.style.display = 'block';
+                if (data.graph_data && data.graph_data.desmos_json) {
+                    renderGraph(data.graph_data.desmos_json);
+                    requestAnimationFrame(() => document.getElementById('calculator').scrollIntoView({ behavior: 'smooth' }));
+                    setStatus('Graphed!', 'ok');
+                } else if (data.validated_latex) {
+                    setStatus('Validated: ' + data.validated_latex, 'ok');
+                } else {
+                    setStatus('No validated expression returned', 'error');
+                }
+            }
+        }
+        loadLog();
+    } catch (e) {
+        setStatus('Error: ' + e.message, 'error');
+    }
+    _activeAbortController = null;
+    document.getElementById('abortBtn').style.display = 'none';
+}
+
+function renderLogEntries(entries) {
+    const el = document.getElementById('log');
+    try {
+        if (!entries || entries.length === 0) {
+            el.textContent = 'No entries yet.';
+            return;
+        }
+
+        // Group entries by iteration
+        var groups = {};
+        entries.forEach(function(e) {
+            var it = e.iteration;
+            if (it === undefined || it === null) return;
+            if (!groups[it]) groups[it] = [];
+            groups[it].push(e);
+        });
+
+        var html = '';
+        // Display newest iterations first
+        var sortedIters = Object.keys(groups).sort(function(a, b) { return b - a; });
+
+        sortedIters.forEach(function(it) {
+            var entries = groups[it];
+            var iterEntry = null;
+            var responseEntries = [];
+
+            // Separate the graph_iteration entry from response entries
+            entries.forEach(function(e) {
+                if (e.endpoint === 'graph_iteration') {
+                    iterEntry = e;
+                } else {
+                    responseEntries.push(e);
+                }
+            });
+
+            if (!iterEntry) return;
+
+            var tn = iterEntry.tool_names || [];
+            var ta = iterEntry.tool_args || {};
+            var inp = iterEntry.user_input || '';
+            var think = iterEntry.think || '';
+            var pt = iterEntry.prompt_tokens;
+            var ct = iterEntry.completion_tokens;
+
+            // Map endpoint to tool name
+            var toolMap = {
+                'validate_success': 'validate_desmos',
+                'validate_failed': 'validate_desmos',
+                'validate_incomplete': 'validate_desmos',
+                'conditions_declared': 'declare_conditions',
+                'graph_attempt': 'graph',
+                'graph_conditions_missing': 'graph',
+                    'search_call': 'search_internet',
+                'search_past_successes': 'search_past_successes',
+                'lookup_call': 'desmos_latex_lookup',
+                'desmos_reference_call': 'desmos_reference',
+            };
+
+            var iterNum = parseInt(it);
+            html += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+            html += 'ITERATION #' + iterNum + ' "' + inp + '"\n';
+            if (iterEntry.validated_ok === true) html += '   VALIDATED: True\n';
+            if (iterEntry.validated_ok === false) html += '   VALIDATED: False\n';
+            if (iterEntry.consecutive_empty !== undefined) html += '   EMPTY_COUNT: ' + iterEntry.consecutive_empty + '\n';
+            if (iterEntry.locked_conditions) html += '   CONDITIONS: ' + JSON.stringify(iterEntry.locked_conditions) + '\n';
+
+            // Tool call lines (from graph_iteration)
+            if (tn.length > 0) {
+                tn.forEach(function(name, idx) {
+                    html += '[' + name + '] CALL';
+                    if (name === 'validate_desmos' && ta.validate_expr) {
+                         html += ' expression=' + JSON.stringify(ta.validate_expr);
+                     } else if (name === 'validate_desmos_multiple' && ta.validate_exprs) {
+                         html += ' expressions=' + JSON.stringify(ta.validate_exprs);
+                     } else if (name === 'graph' && ta.graph_expr) {
+                        html += ' graphexpr=' + JSON.stringify(ta.graph_expr);
+                    } else if (name === 'declare_conditions' && ta.conditions) {
+                        html += ' conds=' + JSON.stringify(ta.conditions);
+                    } else if (name === 'search_internet' && ta.search_query) {
+                        html += ' query=' + JSON.stringify(ta.search_query);
+                    } else if (name === 'search_past_successes' && ta.past_query) {
+                        html += ' query=' + JSON.stringify(ta.past_query);
+                    } else if (name === 'desmos_latex_lookup' && ta.lookup) {
+                        html += ' cmd=' + JSON.stringify(ta.lookup);
+                    }
+                    html += '\n';
+                });
+            }
+
+            // Tool response lines (one per response entry)
+            responseEntries.forEach(function(e) {
+                var ep = e.endpoint || '';
+                var tool = toolMap[ep] || ep;
+                var expr = e.expression || '';
+
+                html += '→ [' + tool + ']\n';
+
+                if (ep === 'validate_failed') {
+                    var errMsg = (e.error && e.error.errorMessage) || '';
+                    if (errMsg) html += '   Error: ' + errMsg + '\n';
+                } else if (ep === 'validate_success') {
+                    html += '   Result: Passed\n';
+                } else if (ep === 'validate_incomplete') {
+                    if (e.missing && e.missing.length) html += '   Conditions not covered: ' + JSON.stringify(e.missing) + '\n';
+                } else if (ep === 'conditions_declared') {
+                    html += '   Declared: ' + JSON.stringify(e.conditions || []) + '\n';
+                } else if (ep === 'graph_attempt') {
+                    var v = e.valid || {};
+                    html += '   Desmos: ' + (v.isError === false ? 'Accepted' : 'Rejected') + '\n';
+                    if (v.errorMessage) html += '   Error: ' + v.errorMessage + '\n';
+                    if (e.validated_latex) html += '   Validated LaTeX: ' + e.validated_latex + '\n';
+                    if (e.args) {
+                        html += '   ARGS: ' + JSON.stringify(e.args) + '\n';
+                    }
+                } else if (ep === 'graph_conditions_missing') {
+                    if (e.missing && e.missing.length) html += '   Conditions not covered: ' + JSON.stringify(e.missing) + '\n';
+                } else if (ep === 'search_call') {
+                    if (e.args && e.args.query) html += '   Query: ' + e.args.query + '\n';
+                    if (e.results) html += '   Results: ' + e.results.length + '\n';
+                } else if (ep === 'search_past_successes') {
+                    if (e.args && e.args.query) html += '   Query: ' + e.args.query + '\n';
+                    if (e.results !== undefined) html += '   Results: ' + e.results + '\n';
+                } else if (ep === 'lookup_call') {
+                    if (e.args && e.args.command) html += '   Lookup: ' + e.args.command + '\n';
+                    if (e.result && e.result !== '""') html += '   Result: ' + e.result + '\n';
+                } else if (ep === 'desmos_reference_call') {
+                    if (e.args && e.args.query) html += '   Query: ' + e.args.query + '\n';
+                    if (e.results && Array.isArray(e.results)) {
+                        html += '   Files found: ' + e.results.length + '\n';
+                        e.results.forEach(function(r) {
+                            html += '   - ' + r.file + ' (score: ' + r.score + ')\n';
+                            if (r.content) html += '     Content: ' + r.content + '\n';
+                        });
+                    }
+                }
+
+                // Show the actual tool response text the model received
+                  if (e.response_text) {
+                     html += '   Model received: ' + e.response_text + '\n';
+                 }
+            });
+
+            // Think conditions (extracted from model reasoning)
+            if (iterEntry.think_conditions) html += '   THINK_CONDS: ' + JSON.stringify(iterEntry.think_conditions) + '\n';
+
+            // Token usage
+            if (pt || ct) {
+                html += 'TOKENS: prompt=' + (pt || '?') + ' comp=' + (ct || '?') + '\n';
+            }
+
+            // THINK at the bottom (indented)
+            if (think) {
+                var thinkLines = think.split('\n').join('\n   ');
+                html += 'THINK:\n   ' + thinkLines + '\n';
+            }
+
+            // MODEL_RESPONSE after THINK
+            var modelResp = iterEntry.model_response || '';
+            if (modelResp) {
+                var respLines = modelResp.split('\n').join('\n   ');
+                html += 'MODEL_RESPONSE:\n   ' + respLines + '\n';
+            }
+        });
+
+        el.textContent = html;
+    } catch (e) {
+        el.textContent = 'Error loading log: ' + e.message;
+    }
+}
+
+async function loadLog(session_id) {
+    try {
+        const url = session_id
+            ? BASE + '/api/learning_log?session=' + session_id + '&_t=' + Date.now()
+            : BASE + '/api/learning_log?_t=' + Date.now();
+        const r = await fetch(url);
+        const data = await r.json();
+        renderLogEntries(data.entries);
+    } catch (e) {
+        document.getElementById('log').textContent = 'Error loading log: ' + e.message;
+    }
+}
+
+loadLog();
+</script>
+</body>
+</html>

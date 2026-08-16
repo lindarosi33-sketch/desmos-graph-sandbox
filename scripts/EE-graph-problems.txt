@@ -1,0 +1,66 @@
+# EE Graph Problems for Sandbox Testing
+# One expression per line. Lines starting with # are comments.
+# Use with: python scripts/run_batch.py scripts/EE-graph-problems.txt
+
+# -- AC Circuits --
+Graph a 60 Hz sine wave with 170 V peak amplitude over 3 periods
+Graph three-phase voltages: phase A = sin(x), phase B = sin(x - 2π/3), phase C = sin(x + 2π/3) over 0 to 4π
+Show amplitude modulation: (1 + 0.5 cos(2x)) sin(20x) over 0 to 4π
+Graph a 1 kHz triangle wave over 2 periods with 5 V amplitude
+Graph a 5 V peak-to-peak square wave at 100 Hz over 3 periods
+
+# -- Transient Response --
+Graph RC charging: v(t) = 12(1 - e^(-t/0.1)) for t ≥ 0
+Graph RC discharging: v(t) = 12 e^(-t/0.1) for t ≥ 0
+Graph RLC underdamped response: v(t) = 10 e^(-2t) cos(10t) for t ≥ 0
+Graph RL step response: i(t) = 5(1 - e^(-t/0.05)) for t ≥ 0
+Graph critically damped RLC: v(t) = 10(1 + 5t)e^(-5t) for t ≥ 0
+
+# -- Rectification --
+Graph half-wave rectified sine: max(sin(x), 0) over 0 to 4π
+Graph full-wave rectified sine: |sin(x)| over 0 to 4π
+Graph a 5 V DC offset sine: 5 + 3 sin(x) over 0 to 4π
+Graph diode clipping: clip sin(x) at -0.7 and 0.7
+Graph voltage doubler output: |sin(x)| + 1 over 0 to 4π
+
+# -- Filter Responses --
+Graph low-pass filter magnitude: 1 / sqrt(1 + (f)^2) for f = 0 to 10
+Graph high-pass filter magnitude: f / sqrt(1 + f^2) for f = 0 to 10
+Graph band-pass filter: f / sqrt((1 - f^2)^2 + (0.1 f)^2) for f = 0 to 5
+Graph integrator output: -∫sin(t) dt from 0 to x = cos(x) - 1
+Graph differentiator output: d/dx sin(x) = cos(x)
+
+# -- Fourier Series --
+Graph square wave approximation: sum from n=1 to 5 of (sin((2n-1)x) / (2n-1)) * (4/π)
+Graph sawtooth wave: sum from n=1 to 10 of (sin(nx) / n) * (2/π)
+Graph triangle wave: sum from n=0 to 5 of ((-1)^n sin((2n+1)x) / (2n+1)^2) * (8/π^2)
+Graph first 3 harmonics: sin(x) + 0.5 sin(3x) + 0.33 sin(5x)
+Graph AM spectrum: sin(20x) + 0.25 sin(18x) + 0.25 sin(22x)
+
+# -- Power --
+Graph instantaneous power for resistive load: sin^2(x) over 0 to 4π
+Graph power factor vs phase angle: cos(φ) for φ = -90° to 90°
+Graph three-phase power: sin^2(x) + sin^2(x - 2π/3) + sin^2(x + 2π/3) (constant)
+Graph power triangle: horizontal leg = 100, vertical leg = 75, hypotenuse from origin
+Graph apparent power: sqrt(P^2 + Q^2) for P = 0 to 100 with Q = 50
+
+# -- Semiconductors --
+Graph diode I-V: I = (e^(V/0.026) - 1) for V = -0.1 to 0.8
+Graph Zener diode breakdown: I-V curve showing reverse breakdown at -5 V
+Graph BJT transfer: I_C = β I_B with β = 100, I_B from 0 to 50 μA
+Graph MOSFET threshold: I_D = k(V_GS - V_T)^2 for V_GS from 0 to 5 V
+Graph op-amp saturation: output = clamp(100(positive - negative), -12, 12)
+
+# -- Modulation --
+Graph FM waveform: cos(10x + 2 sin(x)) over 0 to 4π
+Graph PWM signal: square wave with duty cycle varying as 0.5 + 0.3 sin(x)
+Graph QPSK constellation: unit circle with points at 45°, 135°, 225°, 315°
+Graph eye diagram: overlay sin(x) and sin(x + 0.1) for x = 0 to 2π
+Graph BPSK: cos(x) for bit 1, cos(x + π) for bit 0, alternating
+
+# -- Phase and Frequency --
+Graph phase shift: sin(x) vs sin(x - π/2) vs sin(x - π) over 0 to 2π
+Graph frequency change: sin(x) vs sin(2x) vs sin(3x) over 0 to 4π
+Graph phase comparison: sin(x) and sin(x - 30°), show phase difference
+Graph frequency sweep: sin(x^2) over 0 to 4π showing increasing frequency
+Graph RC low-pass group delay: τ(ω) = 1/(1 + ω²) for ω = 0 to 10   

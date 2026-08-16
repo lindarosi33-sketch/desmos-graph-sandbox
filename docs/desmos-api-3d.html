@@ -1,0 +1,159 @@
+<!doctype html>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Desmos 3D Calculator API v1.12 documentation</title>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1"
+        />
+        <link rel="stylesheet" href="api_docs-c6f362244afab204582c5b589926d10cf6574aa5.css" />
+      </head>
+      <body>
+        <div id="navbar" class="navbar " role="navigation">
+          <div class="navbar-inner">
+            <div class="nav">
+              <div class="sticky-nav span4">
+                <ul>
+                  <!-- populated by js -->
+                </ul>
+              </div>
+            </div>
+            <span class="brand" id="pageHeader" role="heading" aria-level="1">
+        Desmos API <b class="version">v1.12</b>
+      </span>
+      <div class="header-rhs">
+        <a class="header-rhs-link" href="/api-terms?lang=en"
+          >API Terms of Service</a
+        >
+        <span>|</span>
+        <a class="header-rhs-link" href="/api/changelog?lang=en"
+          >Change Log</a
+        >
+      </div>
+          </div>
+        </div>
+
+        <div class="span4"></div>
+        <div class="span8 main" role="main" aria-labelledby="pageHeader">
+          <script src="/api/v1.12/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+<h2 id="document-quickstart">Quick Start</h2>
+<p>The Desmos 3D Graphing Calculator provides a beautiful and simple way to embed 3D graphs into your web page or web app. Here's how to create an interactive 3D graph in just a few lines of code:</p>
+<p><strong>Step 1:</strong> include our secure JavaScript file:</p>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://www.desmos.com/api/v1.12/calculator.js?apiKey=[YOUR_API_KEY_HERE]&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span></code></pre>
+<p>To obtain your own API key, visit <a href="/my-api">desmos.com/my-api</a>.</p>
+<p><strong>Step 2:</strong> add an element to the page:</p>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;calculator&quot;</span> <span class="hljs-attr">style</span>=<span class="hljs-string">&quot;width: 600px; height: 400px;&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre>
+<p><strong>Step 3:</strong> add the following lines of JavaScript:</p>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="language-javascript">
+  <span class="hljs-keyword">var</span> elt = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;calculator&#x27;</span>);
+  <span class="hljs-keyword">var</span> calculator = <span class="hljs-title class_">Desmos</span>.<span class="hljs-title class_">Calculator3D</span>(elt);
+</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span></code></pre>
+<p><strong>Step 4:</strong> Enjoy:</p>
+<div id="quickstart-3d"></div>
+<p>See <a href="examples/3d.html">examples/3d.html</a> to see this example live.</p>
+<h2 id="document-calculator">Creating a New Instance</h2>
+<p>The basic structure of the API is an embeddable <code>Calculator3D</code> instance, which is the page element that will display your calculator.</p>
+<h3 id="document-calculator-constructor">Constructor</h3>
+<h4><em>constructor</em> Calculator3D(<em>element</em>, [<em>options</em>])</h4>
+<p>Creates a <code>Calculator3D</code> object to control the embedded instance in the DOM element specified by <em>element</em>.</p>
+<p>It is possible to create a <code>Calculator3D</code> instance outside of the DOM and call methods on the returned
+object, but the view will not be created until <em>element</em> is inserted into the DOM.</p>
+<p>Note: for every instantiated <code>Calculator3D</code> instance, we run a small set of computations on every frame
+in order to reliably detect when the instance is added to the DOM, removed from it, show, hidden, or resized.
+This could, theoretically, have performance and/or memory implications, although the effects are miniscule unless you instantiate many <code>Calculator3D</code> instances.</p>
+<p>If you want to manage sizing yourself, you can instantiate with the API option <code>{autosize: false}</code>. In this case, you must call <code>.resize()</code> anytime that the instance is added to the DOM, removed from the DOM, or resized.</p>
+<p>When you're done using a calculator instance, call <code>.destroy()</code> to remove all of our listeners.</p>
+<p>Example:</p>
+<pre><code class="language-javascript"><span class="hljs-keyword">var</span> elt = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;my-calculator&#x27;</span>);
+<span class="hljs-keyword">var</span> calculator = <span class="hljs-title class_">Desmos</span>.<span class="hljs-title class_">Calculator3D</span>(elt);
+
+<span class="hljs-comment">// Create a calculator instance outside of the DOM</span>
+<span class="hljs-keyword">var</span> elt2 = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">createElement</span>(<span class="hljs-string">&#x27;div&#x27;</span>);
+<span class="hljs-keyword">var</span> calculator2 = <span class="hljs-title class_">Desmos</span>.<span class="hljs-title class_">Calculator3D</span>(elt2);
+
+<span class="hljs-comment">// Insert the element into the DOM and create the calculator view</span>
+<span class="hljs-variable language_">document</span>.<span class="hljs-property">body</span>.<span class="hljs-title function_">appendChild</span>(elt2);
+
+<span class="hljs-comment">// Destroy the root element and detach the calculator view</span>
+elt2.<span class="hljs-title function_">remove</span>();
+calculator2.<span class="hljs-title function_">destroy</span>();</code></pre>
+<p>The object returned is a <code>Desmos.Calculator3D</code> object.</p>
+<p><em>options</em> is an optional object that specifies features that should be included or excluded. Any option available
+to a <code>Desmos.GraphingCalculator</code> instance, <a href="../docs/index.html#document-calculator">documented here</a>, may also be passed
+to a <code>Desmos.Calculator3D</code> instance.</p>
+<h4>Calculator.destroy()</h4>
+<p>Free listeners and resources used by the calculator view.</p>
+<h2 id="document-saving-and-loading">Saving and Loading</h2>
+<h4 id="Calculator.getState">Calculator.getState()</h4>
+<p>Returns a JavaScript object representing the current state of the calculator. Used in conjunction with <em>Calculator.setState</em> to save and restore states.</p>
+<p>The return value of <em>Calculator.getState</em> may be serialized to a string using <em>JSON.stringify</em>.</p>
+<p><em>Warning:</em> States should be treated as opaque values. Manipulating states directly may produce a result that cannot be loaded by <em>Calculator.setState</em>.</p>
+<h4 id="Calculator.setState">Calculator.setState(obj, [options])</h4>
+<p>Reset to a state previously saved using <em>Calculator.getState</em>. <em>options</em> is an optional object that controls the behavior of when setting the state.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>allowUndo</td>
+<td>Boolean</td>
+<td><code>false</code></td>
+<td>Preserve the undo/redo history.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Calculator.setBlank">Calculator.setBlank([options])</h4>
+<p>Reset to a blank state. If an <em>options</em> object is present, the <em>allowUndo</em> property serves the same function as it does in <em>Calculator.setState</em>.</p>
+<p>Examples:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// Save the current state of a calculator instance</span>
+<span class="hljs-keyword">var</span> state = calculator.<span class="hljs-title function_">getState</span>();
+
+<span class="hljs-comment">// Use jQuery to post a state to your server for permanent storage</span>
+$.<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/myendpoint&#x27;</span>, <span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">stringify</span>(state));
+
+<span class="hljs-comment">// Load a state into a calculator instance</span>
+calculator.<span class="hljs-title function_">setState</span>(state);
+
+<span class="hljs-comment">// Reset to a blank state</span>
+calculator.<span class="hljs-title function_">setBlank</span>();</code></pre>
+<h4 id="Calculator.setDefaultState">Calculator.setDefaultState(obj)</h4>
+<p>Add a default state and a reset button to allow the user to reset the calculator to the default state after they have changed it.</p>
+<p>Examples:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// Save the current state</span>
+<span class="hljs-keyword">var</span> newDefaultState = calculator.<span class="hljs-title function_">getState</span>();
+
+<span class="hljs-comment">// Set a new default state to match the current state</span>
+calculator.<span class="hljs-title function_">setDefaultState</span>(newDefaultState);</code></pre>
+<h2 id="document-more-docs">More Documentation</h2>
+<p>The 3D calculator is built on top of the graphing calculator and shares its underlying API. For more information about this shared API surface, see <a href="../docs/index.html">the graphing calculator API documentation here</a>.</p>
+<h2 id="document-api-keys">API Keys</h2>
+<p>In order to include the Desmos API in your page, you must supply an API key as a URL parameter, like this:</p>
+<pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;https://www.desmos.com/api/v1.12/calculator.js?apiKey=[YOUR_API_KEY_HERE]&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span></code></pre>
+<p>To obtain your own API key, visit <a href="/my-api">desmos.com/my-api</a>.</p>
+<h2 id="document-collected-examples">Collected Examples</h2>
+<ul>
+<li><a href="examples/3d.html">examples/3d.html</a></li>
+</ul>
+
+        </div>
+
+        <div style="clear:both"></div>
+        <footer class="footer" role="contentinfo">
+          <div class="container">
+            <p class="pull-right"><a href="#">Back to top</a></p>
+            <p>&copy; Copyright 2026, Desmos Studio, PBC<br /></p>
+          </div>
+        </footer>
+
+        <script src="api_docs-d6621bbf22385911b86217da72555c24dce76878.js"></script>
+      </body>
+    </html>
