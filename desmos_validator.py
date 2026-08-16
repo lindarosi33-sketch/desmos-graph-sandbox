@@ -1,9 +1,13 @@
 import concurrent.futures
 import json
 import logging
+import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 from playwright.sync_api import sync_playwright
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger('desmos_validator')
 
@@ -29,11 +33,11 @@ _playwright = None
 _browser = None
 _page = None
 
-def _build_html() -> str:
+def _build_html(api_key: str = "") -> str:
     """Build HTML page with Desmos API and observer-based validation functions."""
-    return """<!DOCTYPE html>
+    html = """<!DOCTYPE html>
 <html><head>
-<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=DESMOS_API_KEY_REDACTED"></script>
+<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=__DESMOS_API_KEY__"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <style>body{margin:0}#c{width:400px;height:300px}</style>
 </head><body>
@@ -152,6 +156,7 @@ function validateMultiple(expressions) {
 }
 </script>
 </body></html>"""
+    return html.replace("__DESMOS_API_KEY__", api_key)
 
 _CACHE: dict[str, dict] = {}
 
@@ -196,7 +201,7 @@ def start():
     _page.on("crash", _on_browser_crash)
     _page.set_viewport_size({"width": 420, "height": 400})
     _page.goto('about:blank')
-    _page.set_content(_build_html(), wait_until='domcontentloaded')
+    _page.set_content(_build_html(os.getenv("DESMOS_API_KEY", "")), wait_until='domcontentloaded')
     try:
         _page.wait_for_function("typeof Desmos !== 'undefined' && Desmos.GraphingCalculator", timeout=15000)
     except Exception as e:

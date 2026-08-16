@@ -14,3 +14,6 @@ logs/
 scripts/batch_results.json
 *.gguf
 
+# Secrets (env vars) — never commit real keys
+.env
+

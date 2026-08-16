@@ -21,12 +21,14 @@ Each `Iteration` is immutable, so the final `complete` SSE event always pulls fr
 ```bash
 pip install -r requirements.txt
 playwright install chromium
+cp .env.example .env        # then set your Desmos API key
 ```
 
 Environment notes:
 - `desmos_validator.py` needs a real Chromium. If you use a manual Chrome-for-Testing install, point `PLAYWRIGHT_BROWSERS_PATH` at `~/.cache/ms-playwright`.
 - Unset any stale `LD_PRELOAD` that could break browser launch.
 - The model server must be running and reachable (default `http://localhost:8003/v1`).
+- Set `DESMOS_API_KEY` in `.env` (or the environment). Get a key at https://desmos.com/my-api. The key is loaded at runtime and never hardcoded.
 
 ## Run
 

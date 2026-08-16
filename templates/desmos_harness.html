@@ -16,7 +16,21 @@ button:hover{background:#1a6fd9}
 .spinner{width:20px;height:20px;border:3px solid #444;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
-<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=DESMOS_API_KEY_REDACTED"></script>
+<script>
+(function () {
+    fetch(location.origin + '/api/config').then(function (r) { return r.json(); }).then(function (cfg) {
+        var s = document.createElement('script');
+        s.src = 'https://www.desmos.com/api/v1.9/calculator.js?apiKey=' + encodeURIComponent(cfg.desmosApiKey || '');
+        s.onload = function () {
+            if (window.calc) calc.destroy();
+            calc = Desmos.GraphingCalculator(document.getElementById('calculator'), {
+                expressions:true, settingsMenu:false, zoomButtons:true, border:false
+            });
+        };
+        document.head.appendChild(s);
+    });
+})();
+</script>
 </head>
 <body>
 <h2 style="color:#4a9eff">Sandbox Desmos Graph Test</h2>
@@ -40,9 +54,7 @@ button:hover{background:#1a6fd9}
 
 <script>
 const elt = document.getElementById('calculator');
-let calc = Desmos.GraphingCalculator(elt, {
-    expressions:true, settingsMenu:false, zoomButtons:true, border:false
-});
+let calc = null;
 const BASE = window.location.origin;
 
 

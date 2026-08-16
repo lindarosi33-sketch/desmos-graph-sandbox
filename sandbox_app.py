@@ -11,8 +11,11 @@ from typing import Optional
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, request, jsonify, send_from_directory, Response
+from dotenv import load_dotenv
 from graph_brain import GraphBrain
 from desmos_validator import validate_latex, validate_multiple as validate_multiple_latex, cleanup as cleanup_validator
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('sandbox')
@@ -1331,6 +1334,10 @@ def abort_endpoint():
 @app.route('/<path:filename>')
 def serve_test(filename='desmos_harness.html'):
     return send_from_directory(os.path.join(PROJECT_ROOT, 'templates'), filename)
+
+@app.route('/api/config')
+def config_endpoint():
+    return jsonify({"desmosApiKey": os.getenv("DESMOS_API_KEY", "")})
 
 @app.route('/api/learning_log')
 def view_learning_log():
