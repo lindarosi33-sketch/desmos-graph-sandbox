@@ -233,7 +233,7 @@ def record(transcript_path, out_path, pace, fps, width, hold=3.0):
         cmd1 = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(fps), "-i", pattern, "-vf",
                 f"fps={fps},scale={width}:-1:flags=lanczos,palettegen", pal]
         cmd2 = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(fps), "-i", pattern, "-i", pal, "-lavfi",
-                f"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse", "-loop", "-1", tmp_gif]
+                f"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse", tmp_gif]
         for cmd in (cmd1, cmd2):
             r = subprocess.run(cmd)
             if r.returncode != 0:

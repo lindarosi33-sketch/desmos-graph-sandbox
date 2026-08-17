@@ -14,28 +14,10 @@ Each `Iteration` is immutable, so the final `complete` SSE event always pulls fr
 
 ## Demo
 
-![Replay of a session graphing a Fourier square wave](demo/demo.gif)
+![A recorded session graphing a Fourier square wave](demo/demo.gif)
 
-The GIF replays a recorded session: the model is asked to graph
-
-```
-y = \frac{4}{\pi}\left(\sin(x) + \frac{\sin(3x)}{3} + \frac{\sin(5x)}{5} + \frac{\sin(7x)}{7} + \frac{\sin(9x)}{9}\right)
-```
-
-and you watch it work through iterations — declaring conditions, validating each LaTeX
-candidate against the live Desmos API, and graphing — until the final curve is rendered.
-The video plays once and holds on the final graph (no looping).
-
-No model server is needed to view it: the GIF replays a captured transcript
-(`demo/demo_session.json`, extracted from `logs/learning_log.jsonl`) through the same
-SSE stream the harness consumes. Re-record it with:
-
-```bash
-python scripts/make_demo_video.py --out demo/demo.gif --pace 0.55 --fps 6 --width 800 --hold 3
-```
-
-(The script serves a throwaway mock of the API, drives the harness in a headed browser,
-and encodes the captured frames to a GIF.)
+A replay of a recorded session showing the model working through iterations of
+LaTeX validation against the Desmos API until the final curve renders.
 
 ## Tools (8)
 
