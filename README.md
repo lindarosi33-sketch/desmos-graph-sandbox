@@ -14,10 +14,11 @@ Each `Iteration` is immutable, so the final `complete` SSE event always pulls fr
 
 ## Demo
 
-![A recorded session graphing a Fourier square wave](demo/demo.gif)
+![Final rendered graph from a recorded session](demo/demo_final.png)
 
 A replay of a recorded session showing the model working through iterations of
-LaTeX validation against the Desmos API until the final curve renders.
+LaTeX validation against the Desmos API until the final curve renders. The full
+animation is available as `demo/demo.gif`.
 
 ## Tools (8)
 
